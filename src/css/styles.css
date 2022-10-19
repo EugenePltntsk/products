@@ -16,5 +16,18 @@ body {
 
 img {
   width: 200px;
-  height: 200px;
+  height: auto;
+}
+
+span {
+  display: block;
+}
+
+p {
+  margin: 0;
+}
+
+li {
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
