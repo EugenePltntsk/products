@@ -7,8 +7,50 @@
     <title>Homework 10</title>
   </head>
   <body>
-  
     <div id="app"></div>
+
+    <form id="form">
+      <label>
+        Product
+        <select name="type" id="type"></select>
+      </label>
+
+      <label>
+        Brand
+        <input type="text" id="brand" name="brand" placeholder="Brand" required/>
+      </label>
+<label> Model
+  <input type="text" id="'model" name="model" placeholder="Model" required/>
+</label>
+     <label> Image
+      <input type="text" id="image" name="image" placeholder="Image" required/>
+     </label>
+      
+      <label> Price
+        <input type="number" id="price" name="price" placeholder="Price" required/>
+      </label>
+
+      <select name="currency" id="currency"></select>
+      <label> Color
+        <input type="text" id="color" name="color" placeholder="Color" required/>
+      </label>
+      
+      <label> Description
+        <input type="text" id="'description" name="description" placeholder="Description"/>
+      </label>
+      
+      <label> New
+        <input name="isNew" value="new" type="radio" checked/>
+      </label>
+      <label> Used
+        <input name="isNew" value="" type="radio" />
+      </label>
+      <label> Quantity
+        <input type="number" id="'quantity" name="quantity" placeholder="Quantity" required/>
+      </label>
+      
+      <button type="submit" id="submit">Create</button>
+    </form>
 
     <!-- <ul id='phones'></ul>
     <ul id='tvs'></ul>

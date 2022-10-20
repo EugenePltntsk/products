@@ -2,10 +2,10 @@
   "name": "parcel-project-template",
   "version": "2.0.0",
   "description": "",
-  "homepage": "https://goitacademy.github.io/EugenePltntsk/goit-js-hw-10",
+  "homepage": "https://EugenePltntsk.github.io/products",
   "scripts": {
     "start": "parcel src/*.html",
-    "build": "parcel build src/*.html --public-url /goit-js-hw-10/"
+    "build": "parcel build src/*.html --public-url /products/"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,7 @@
   "dependencies": {
     "lodash.debounce": "^4.0.8",
     "modern-normalize": "^1.1.0",
+    "nanoid": "^4.0.0",
     "notiflix": "^3.2.5"
   },
   "devDependencies": {
