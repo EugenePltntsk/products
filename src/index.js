@@ -106,9 +106,10 @@ const makeProduct = (
   quantity = 0
 ) => {
   if (Object.keys(listOfProducts).includes(type)) {
+    id = nanoid()
     listOfProducts[type].push(
       new Product(
-        id = nanoid(),
+        id,
         type,
         brand,
         model,
