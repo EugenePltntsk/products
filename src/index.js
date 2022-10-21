@@ -1,25 +1,51 @@
 import { Notify } from 'notiflix';
 import debounce from 'lodash.debounce';
-import { nanoid } from 'nanoid'
+import { nanoid } from 'nanoid';
 import './css/styles.css';
+import { getProducts, postProduct, deleteProduct } from './helpers/API';
 
 
-
-
+// postProduct( { type: 'phones',
+// brand: 'Samsung',
+// model: 'S22',
+// image: 'https://img.moyo.ua/img/products/5117/94_4000.jpg?1666105298',
+// price: '850',
+// currency: '$',
+// color: 'black',
+// description: 'this is amazing product',
+// isNew: true,
+// quantity: '490 phones'} );
 
 const refs = {
+  divEl: document.querySelector('#app'),
+  formEl: document.querySelector('#form'),
+};
+let listOfProducts = {
+    phones: [],
+    tvs: [],
+    cars: [],
+    computers: [],
+    tablets: [],
+    watches: [],
+  };
 
-    divEl: document.querySelector('#app'),
-    formEl: document.querySelector("#form"),
-   
+refs.divEl.addEventListener("click", async event => {
+    if(event.target.tagName === "BUTTON" && event.target.name === "delete") {
+       const deletedProduct = await deleteProduct(event.target.id)
+       console.log(deletedProduct);
+       listOfProducts[deletedProduct.type] = listOfProducts[deletedProduct.type].filter(item => item.id !== event.target.id);
+        }
+        event.target.closest("li").remove();
 
-}
-
+    
+    })
+       
+    
+    
 
 
 class Product {
   constructor(
-    id,
     type,
     brand,
     model,
@@ -31,7 +57,6 @@ class Product {
     isNew,
     quantity = 0
   ) {
-    this.id = id;
     this.type = type;
     this.brand = brand;
     this.model = model;
@@ -63,6 +88,32 @@ class Product {
   }
 }
 
+
+
+
+
+const drawAllProducts = obj => {
+    
+  for (let key in obj) {
+    const ulElement = document.createElement('ul');
+    ulElement.classList.add(`${key}`);
+    obj[key].forEach(item => {
+      ulElement.insertAdjacentHTML('beforeend', getTemplate(item));
+    });
+    refs.divEl.appendChild(ulElement);
+  }
+};
+
+const sortAndFillListOfProducts = async () => {
+    const result = await getProducts();
+    result.forEach( item => {
+        listOfProducts[item.type].push(item);
+    })
+    drawAllProducts(listOfProducts);
+}
+
+sortAndFillListOfProducts();
+
 const phone = new Product(
   'phones',
   'Samsung',
@@ -80,20 +131,14 @@ const phone = new Product(
 
 // phones, tv, cars, computers, tablets, watches.
 // const listOfProducts = ["phones", "tvs", "cars", "computers", "tablets", "watches"]
-let listOfProducts;
-const savedProducts = JSON.parse(localStorage.getItem("products"))
 
-listOfProducts = savedProducts || {
-  phones: [],
-  tvs: [],
-  cars: [],
-  computers: [],
-  tablets: [],
-  watches: [],
+const getAllProducts = async () => {
+  allProductsFromApi = await getProducts();
 };
-const listOfCurrency = ["$", "Uah", "Euro"]
 
-const makeProduct = (
+const listOfCurrency = ['$', 'Uah', 'Euro'];
+
+const makeProduct = async ({
   type,
   brand,
   model,
@@ -103,28 +148,26 @@ const makeProduct = (
   color,
   description,
   isNew,
-  quantity = 0
-) => {
-  if (Object.keys(listOfProducts).includes(type)) {
-    id = nanoid()
-    listOfProducts[type].push(
-      new Product(
-        id,
-        type,
-        brand,
-        model,
-        image,
-        price,
-        currency,
-        color,
-        description,
-        isNew,
-        quantity
-      )
-    );
-  } else {
-    return alert(`We don't sell ${type}`);
-  }
+  quantity,
+}) => {
+  const newProduct = new Product(
+    type,
+    brand,
+    model,
+    image,
+    price,
+    currency,
+    color,
+    description,
+    isNew,
+    quantity
+  );
+
+  const postData = await postProduct(newProduct);
+
+  listOfProducts[type].push(postData);
+
+  return postData;
 };
 
 // makeProduct(
@@ -152,7 +195,6 @@ const makeProduct = (
 //   true,
 //   '490 phones'
 // );
-
 
 // makeProduct(
 //   'phones',
@@ -222,6 +264,7 @@ const makeProduct = (
 // )
 
 const getTemplate = ({
+    id,
   type,
   brand,
   model,
@@ -235,79 +278,66 @@ const getTemplate = ({
 }) => {
   return `<li><a href='${image}'><span>Type of product: ${type}</span><span>Brand: ${brand}</span><span>${model}</span><img src="${image}" alt="${type}"/><span>Price: ${price}</span><span>Currency: ${currency}</span><span>Color: ${color}</span><p>Description: ${description}</p><span>new or used: ${
     isNew ? 'new' : 'used'
-  }</span><span>Available: ${quantity}</span></a></li>`;
+  }</span><span>Available: ${quantity}</span></a><button type='button' name ='delete' id='${id}'>Delete Product</button></li>`;
 };
-
-const drawAllProducts = obj => {
-  for (let key in obj) {
-    const ulElement = document.createElement('ul');
-    ulElement.classList.add(`${key}`);
-    obj[key].forEach(item => {
-      ulElement.insertAdjacentHTML('beforeend', getTemplate(item));
-    });
-    refs.divEl.appendChild(ulElement);
-  }
-};
-
-drawAllProducts(listOfProducts);
 
 const fillOptionsType = () => {
+  const options = Object.keys(listOfProducts).map(item => {
+    return `<option value="${item}">${item.slice(0, -1)}</option>`;
+  });
 
-    const options = Object.keys(listOfProducts).map(item => {
-        return `<option value="${item}">${item.slice(0, -1)}</option>`
-    })
-     
-    refs.formEl.elements.type.innerHTML = options.join("");
-
-}
+  refs.formEl.elements.type.innerHTML = options.join('');
+};
 
 fillOptionsType();
 
 const fillOptionsCurrency = () => {
-    const optionsCurrency = listOfCurrency.map(item => {
-        return `<option value='${item}'>${item}</option>`
-    })
-    refs.formEl.elements.currency.innerHTML = optionsCurrency.join("");
-    
-}
+  const optionsCurrency = listOfCurrency.map(item => {
+    return `<option value='${item}'>${item}</option>`;
+  });
+  refs.formEl.elements.currency.innerHTML = optionsCurrency.join('');
+};
 
 fillOptionsCurrency();
 
+const createProductBySubmit = async event => {
+  event.preventDefault();
+  
+  const type = event.target.elements.type.value;
+  const brand = event.target.elements.brand.value;
+  const model = event.target.elements.model.value;
+  const image = event.target.elements.image.value;
+  const price = event.target.elements.price.value;
+  const currency = event.target.elements.currency.value;
+  const color = event.target.elements.color.value;
+  const description = event.target.elements.description.value;
+  const isNew = !!event.target.elements.isNew.value;
+  const quantity = event.target.elements.quantity.value;
 
-const createProductBySubmit = (event) => {
-    
-    
-event.preventDefault();
-    const type = event.target.elements.type.value;
-    const brand = event.target.elements.brand.value;
-    const model = event.target.elements.model.value;
-    const image = event.target.elements.image.value;
-    const price = event.target.elements.price.value;
-    const currency = event.target.elements.currency.value;
-    const color = event.target.elements.color.value;
-    const description = event.target.elements.description.value;
-    const isNew = !!event.target.elements.isNew.value;
-    const quantity = event.target.elements.quantity.value;
-    
-    makeProduct(type, brand, model, image, price, currency, color, description, isNew, quantity);
+  const result = await makeProduct({
+    type,
+    brand,
+    model,
+    image,
+    price,
+    currency,
+    color,
+    description,
+    isNew,
+    quantity,
+  });
 
-   
+  document.querySelector(`.${type}`).insertAdjacentHTML(
+    'beforeend', getTemplate(result));
 
-    document.querySelector(`.${type}`).insertAdjacentHTML("beforeend", getTemplate({ type, brand, model, image, price, currency, color, description, isNew, quantity }));
+    event.target.reset();
 
-    localStorage.setItem("products", JSON.stringify(listOfProducts));
-    
-}
+};
 
-
-refs.formEl.addEventListener("submit", createProductBySubmit)
-
-
+refs.formEl.addEventListener('submit', createProductBySubmit);
 
 // зробити форму. наповнити джанними (оформити, додати селекти, заповнити радіобаттони, плейсхолдери).
 // зібрати данні з форми. по сабміту створити товар. DONE!
 
 //після захолду на сторінку.. треба зчитати з локал стор. запустити функйц. яка відмалює, якщо там щось є.
 // коли створ товар ми маємо в локал стор записати новий обʼєкт з нашими даними(оновити локал стор)
-
-
